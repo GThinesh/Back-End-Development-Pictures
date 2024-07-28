@@ -35,7 +35,10 @@ def count():
 ######################################################################
 @app.route("/picture", methods=["GET"])
 def get_pictures():
-    pass
+    """Return all pictures"""
+    if data:
+        return jsonify(data), 200
+    return {"message": "Internal server error"}, 500
 
 ######################################################################
 # GET A PICTURE
@@ -44,7 +47,12 @@ def get_pictures():
 
 @app.route("/picture/<int:id>", methods=["GET"])
 def get_picture_by_id(id):
-    pass
+    """Returns picture by id. 404 if the picture with given id is not found"""
+    item = find_by_id(id)
+    if item:
+        return jsonify(item), 200
+
+    return {"message": f'Picture with id {id} not found'}, 404
 
 
 ######################################################################
@@ -52,7 +60,13 @@ def get_picture_by_id(id):
 ######################################################################
 @app.route("/picture", methods=["POST"])
 def create_picture():
-    pass
+    """Create the picture, 302 if the picture already exists"""
+    picture = request.json
+    if find_by_id(picture['id']):
+        return {"Message": f"picture with id {picture['id']} already present"}, 302
+
+    data.append(picture)
+    return jsonify(picture), 201
 
 ######################################################################
 # UPDATE A PICTURE
@@ -61,11 +75,26 @@ def create_picture():
 
 @app.route("/picture/<int:id>", methods=["PUT"])
 def update_picture(id):
-    pass
+    """Update the picture with given id to the new value."""
+    picture = request.json
+    for i in range(len(data)):
+        if data[i]['id'] == id:
+            data[i] = picture
+            return jsonify(picture), 200
+
+    return {"message": "picture not found"}, 404
 
 ######################################################################
 # DELETE A PICTURE
 ######################################################################
 @app.route("/picture/<int:id>", methods=["DELETE"])
 def delete_picture(id):
-    pass
+    """Remove the picture with the given id. 404 if the picture not found"""
+    item = find_by_id(id)
+    if item:
+        data.remove(item)
+        return {}, 204
+    return {"message": "picture not found"}, 404
+
+def find_by_id(id):
+    return next((obj for obj in data if obj['id'] == id), None)
